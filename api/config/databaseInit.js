@@ -24,6 +24,10 @@ const createDatabaseTables = async () => {
     await Parcel.sync({});
     await Partner.sync({});
     await TaxValues.sync({});
+    await TaxValues.create({
+        defaultTax: 1,
+        after24Months: 1,
+    })
 }
 
 

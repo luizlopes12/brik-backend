@@ -12,8 +12,8 @@ const io = require('socket.io')(server,{
     }
   })
 app.use(cors({
-    origin: '*'
-  }))
+    origin: 'https://bricks-empreendimentos.vercel.app'
+  }));
 io.on('connection', socket =>{ 
     console.log('Socket conectado: '+ socket.id)
     socket.on('disconnect', () =>{

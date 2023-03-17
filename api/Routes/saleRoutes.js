@@ -9,8 +9,7 @@ const jwtAuth = require('../middlewares/jwtAuth.js')
 router
 .get('/sales/list', salesController.listAllSales)
 .get('/sales/list/:id', salesController.listSaleById)
+.get('/sales/resume', salesController.getChartData)
 .post('/sales/create', salesController.createSaleAndTheirAnualParcels)
 .post('/sales/status/update', salesController.updateSaleStatus)
-// .get('/test/cron', salesController.testCron)
-
 module.exports = router

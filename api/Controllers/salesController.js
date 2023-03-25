@@ -527,6 +527,7 @@ class salesController {
               ],
             });
             if (saleCreatedData) {
+              await Lot.update({ isSolded: true }, { where: { id: loteId } });
               res
                 .status(200)
                 .json({
@@ -662,10 +663,11 @@ class salesController {
       const monthlyResults = await Sale.findAll({
         attributes: [
           [Sequelize.fn("MONTH", Sequelize.col("saleDate")), "month"],
+          [Sequelize.fn("YEAR", Sequelize.col("saleDate")), "year"],
           [Sequelize.fn("SUM", Sequelize.col("salePrice")), "sumOfSales"],
           [Sequelize.fn("COUNT", Sequelize.col("id")), "salesQuantity"],
         ],
-        group: [Sequelize.fn("MONTH", Sequelize.col("saleDate"))],
+        group: [Sequelize.fn("MONTH", Sequelize.col("saleDate")),Sequelize.fn("YEAR", Sequelize.col("saleDate"))],
         where: {
           createdAt: {
             [Op.gte]: new Date(new Date().getFullYear(), 0, 1),
@@ -676,18 +678,19 @@ class salesController {
       });
   
       const monthlySummary = monthlyResults.map((result) => ({
-        month: result.month,
+        month: `${result.month.toString().padStart(2, '0')}/${result.year}`,
         sumOfSales: parseInt(result.sumOfSales),
         salesQuantity: parseInt(result.salesQuantity),
       }));
   
       const dailyResults = await Sale.findAll({
         attributes: [
-          [Sequelize.fn("DATE", Sequelize.col("saleDate")), "day"],
+          [Sequelize.fn("DAY", Sequelize.col("saleDate")), "day"],
+          [Sequelize.fn("MONTH", Sequelize.col("saleDate")), "month"],
           [Sequelize.fn("SUM", Sequelize.col("salePrice")), "sumOfSales"],
           [Sequelize.fn("COUNT", Sequelize.col("id")), "salesQuantity"],
         ],
-        group: [Sequelize.fn("DATE", Sequelize.col("saleDate"))],
+        group: [Sequelize.fn("DAY", Sequelize.col("saleDate")), Sequelize.fn("MONTH", Sequelize.col("saleDate"))],
         where: {
           saleDate: {
             [Op.gte]: thirtyDaysAgo,
@@ -698,7 +701,7 @@ class salesController {
       });
   
       const dailySummary = dailyResults.map((result) => ({
-        day: result.day.slice(-2),
+        day: `${result.day.toString().padStart(2, '0')}/${result.month.toString().padStart(2, '0')}`,
         sumOfSales: parseInt(result.sumOfSales),
         salesQuantity: parseInt(result.salesQuantity),
       }));

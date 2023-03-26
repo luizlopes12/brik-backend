@@ -40,7 +40,7 @@ class authController {
                   email: email,
                 }
               })
-              bcrypt.compare(password, verifyData.password, (err, result) => {
+              bcrypt.compare(password, verifyData?.password, (err, result) => {
                 if(result){
                     let token = jwt.sign({id: verifyData.id}, process.env.JWT_SECRET, { expiresIn: '1h'})
                     let refreshToken = jwt.sign({id: verifyData.id}, process.env.JWT_SECRET, { expiresIn: '10d'})

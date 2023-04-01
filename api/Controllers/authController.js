@@ -56,8 +56,6 @@ class authController {
                     res.status(403).json({message: 'Email ou senha inválidos'})
                   }
                 });
-              console.log(verifyData)
-            
         }else{
             res.status(206).json({message: 'Informações insuficientes'})
         }
@@ -87,9 +85,6 @@ class authController {
     }
     static updateUser = async (req, res) => {
         const { id,  admin, editDivisions, editLots, editPartners, editBanners, editTaxes } = req.body
-        console.log({
-            id,  admin, editDivisions, editLots, editPartners, editBanners, editTaxes
-        })
         if(id){
             let user = await User.update({
                 admin: admin,

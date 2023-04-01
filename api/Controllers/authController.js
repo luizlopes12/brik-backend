@@ -86,12 +86,12 @@ class authController {
         res.status(200).json(users)
     }
     static updateUser = async (req, res) => {
-        const { id, name, email, phone, admin, editDivisions, editLots, editPartners, editBanners, editTaxes } = req.body
+        const { id,  admin, editDivisions, editLots, editPartners, editBanners, editTaxes } = req.body
+        console.log({
+            id,  admin, editDivisions, editLots, editPartners, editBanners, editTaxes
+        })
         if(id){
             let user = await User.update({
-                name: name,
-                email: email,
-                phone: phone,
                 admin: admin,
                 editDivisions: editDivisions,
                 editLots: editLots,
@@ -103,7 +103,7 @@ class authController {
                     id: id
                 }
             })
-            if(user[0] === 0){
+            if(!user){
                 res.status(404).json({message: 'Usuário não encontrado'})
             }else{
                 let newUsersList = await User.findAll({

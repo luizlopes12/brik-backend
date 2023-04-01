@@ -87,7 +87,7 @@ class authController {
     }
     static updateUser = async (req, res) => {
         const { id, name, email, phone, admin, editDivisions, editLots, editPartners, editBanners, editTaxes } = req.body
-        if(id && name && email && phone && admin !== undefined && editDivisions !== undefined && editLots !== undefined && editPartners !== undefined && editBanners !== undefined && editTaxes !== undefined){
+        if(id){
             let user = await User.update({
                 name: name,
                 email: email,

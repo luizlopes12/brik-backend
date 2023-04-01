@@ -63,7 +63,6 @@ class authController {
     }
 
     static listAllUsers = async (req, res) => {
-          
         let users = await User.findAll({
           attributes: [
             'id',

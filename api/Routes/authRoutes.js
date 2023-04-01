@@ -4,7 +4,7 @@ const router = express.Router()
 
 router
 .get('/users/list', authController.listAllUsers)
-.post('/users/update', authController.updateUser)
+.patch('/users/update', authController.updateUser)
 .post('/login', authController.userLogin)
 .post('/register', authController.userRegistration)
 

@@ -68,6 +68,7 @@ class authController {
           
         let users = await User.findAll({
           attributes: [
+            'id',
             'name',
             'email',
             'admin',
@@ -105,7 +106,20 @@ class authController {
             if(user[0] === 0){
                 res.status(404).json({message: 'Usuário não encontrado'})
             }else{
-                res.status(200).json({message: 'Usuário atualizado com sucesso'})
+                let newUsersList = await User.findAll({
+                    attributes: [
+                      'id',
+                      'name',
+                      'email',
+                      'admin',
+                      'editDivisions',
+                      'editLots',
+                      'editPartners',
+                      'editBanners',
+                      'editTaxes',
+                    ],
+                  });
+                res.status(200).json(newUsersList)
             }
         }else{
             res.status(206).json({message: 'Informações insuficientes'})

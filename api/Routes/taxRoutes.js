@@ -8,6 +8,6 @@ const jwtAuth = require('../middlewares/jwtAuth.js')
 
 router
 .get('/taxes/list', taxController.listAllTaxesValues)
-.put('/taxes/edit', taxController.updateTaxValues)
+.patch('/taxes/edit', taxController.updateTaxValues)
 
 module.exports = router

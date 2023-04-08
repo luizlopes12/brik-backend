@@ -728,6 +728,7 @@ class salesController {
         pass: process.env.EMAIL_PASS,
       },
     });
+    
     smtp.sendMail({
       from: process.env.EMAIL_USER,
       to:  buyer.email,
@@ -754,11 +755,40 @@ class salesController {
       </html>
       `
     }).then((info) => {
-      res.status(200).json({message: 'Email enviado com sucesso', info})
+      res.status(200).json({message: 'Email cliente enviado com sucesso', info})
     }).catch((error) => {
-      res.status(500).json({message: 'Erro ao enviar email', error})
+      res.status(500).json({message: 'Erro ao enviar email cliente', error})
     })
-
+    smtp.sendMail({
+      from: process.env.EMAIL_USER,
+      to:  seller.email,
+      replyTo: process.env.EMAIL_USER,
+      subject: '[BRIK] Formulário de venda',
+      html: `<!DOCTYPE html>
+      <html>
+      <head>
+      </head>
+      <body style="background-color: #f1f1f1 !important; margin: 0; padding: 0;">
+      <style>
+        a:hover {
+          text-decoration: none;
+          color: #fff;
+        }
+      </style>
+          <div class="card" style="background-color: #fff !important; width: 100%; padding: 20px; box-sizing: border-box; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px;">
+              <img src="https://i.imgur.com/loaEjtY.png" alt="Logo BRIK" class="logo" style="width: 150px; margin-bottom: 30px;">
+              <div class="title" style="width: 100%; text-align: center; font-size: 24px; font-weight: bold;">Olá ${seller.name}</div>
+              <div class="subtitle" style="width: 80%; font-size: 18px; margin-top: 10px; margin-bottom: 20px; font-weight: 300;">Clique no link abaixo para preencher o formulário com as informações para a formalização do contrato referente ao processo de compra do lote "Lote 1", pertencente ao loteamento "Jardim Europa"</div>
+              <a href="https://forms.gle/SvYQmjivZGF2A6jA7" class="button" style="background-color: #63C600; margin-bottom: 50px; color: white; padding: 20px 50px; text-decoration: none; font-size: 24px; font-weight: bold; display: inline-block; cursor: pointer;">Preencher formulário</a>
+          </div>
+      </body>
+      </html>
+      `
+    }).then((info) => {
+      res.status(200).json({message: 'Email vendedor enviado com sucesso', info})
+    }).catch((error) => {
+      res.status(500).json({message: 'Erro ao enviar email vendedor', error})
+    })
   };
 }
 

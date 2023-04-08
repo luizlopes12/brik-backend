@@ -12,4 +12,5 @@ router
 .get('/sales/resume', salesController.getChartData)
 .post('/sales/create', salesController.createSaleAndTheirAnualParcels)
 .post('/sales/status/update', salesController.updateSaleStatus)
+.post('/sales/contract/email/send', salesController.sentContractEmail)
 module.exports = router

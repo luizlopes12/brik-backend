@@ -30,6 +30,61 @@ const options = {
 };
 const gerencianet = new Gerencianet(options);
 
+const numeroPorExtenso = (num) => {
+  let unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+  let dezenas = ['', 'dez', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+  let especiais = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+  let milhares = ['', 'mil', 'milhões', 'bilhões', 'trilhões', 'quatrilhões', 'quintilhões', 'sextilhões', 'setilhões', 'octilhões', 'nonilhões'];
+  
+  if (num === 0) {
+    return 'zero';
+  }
+  
+  let extenso = '';
+  let resto = num;
+  
+  for (let i = 9; i >= 0; i--) {
+    let potencia = 10 ** (3 * i);
+    let parte = Math.floor(resto / potencia);
+    resto -= parte * potencia;
+    
+    if (parte === 0) {
+      continue;
+    }
+    
+    let centenas = '';
+    let dezenasEspeciais = '';
+    let dezenasVazias = '';
+    let unidadesExtenso = '';
+    
+    if (parte >= 100) {
+      centenas = `${unidades[parte / 100]}cento `;
+      parte %= 100;
+    }
+    
+    if (parte >= 10 && parte < 20) {
+      dezenasEspeciais = `${especiais[parte - 10]} `;
+      parte = 0;
+    } else if (parte >= 20) {
+      dezenasVazias = `${dezenas[parte / 10]} `;
+      parte %= 10;
+    }
+    
+    if (parte >= 1 && parte <= 9) {
+      unidadesExtenso = `${unidades[parte]} `;
+    }
+    
+    let milharExtenso = milhares[i];
+    extenso += `${centenas}${dezenasEspeciais}${dezenasVazias}${unidadesExtenso}${milharExtenso} `;
+  }
+  
+  return extenso.trim();
+}
+
+
+
+
+
 class salesController {
   static verifyDiscount = async (discount) => {
     if (discount > 0) {
@@ -718,8 +773,9 @@ class salesController {
         });
     }
   };
+
   static sentContractEmail = async (req, res) => {
-    let {seller, buyer} = req.body
+    let {seller, buyer, lotData} = req.body
     const smtp = nodemailer.createTransport({
       host: 'smtp.umbler.com',
       port: 587,
@@ -730,8 +786,45 @@ class salesController {
     });
 
     let mailList = [seller.email, buyer.email, process.env.EMAIL_USER]
-    
-    smtp.sendMail({
+    /*
+      Receber:
+      Nome do loteamento
+      Endereço do loteamento
+      Nome do lote
+      Area do lote(dar um jeito de colocar o número por extenso)
+      Valor do lote
+      Valor de entrada (se houver) e porcentagem correspondente em relação ao valor do lote
+
+      Enviar:
+      Data atual, no formato Registro, dia 00 de mês de 0000
+      Porcentagem sobre o valor do lote
+      Email para o vendedor e comprador, com o formulário de compra preenchido
+    */
+      let entryPercentage = (numeroPorExtenso((((lotData.entryValue / lotData.lotPrice) * 100))))
+      let entryPercentageFormatted = `${(lotData.entryValue / lotData.lotPrice) * 100}% ( ${entryPercentage} )`
+      let lotMetricsFormatted = `${lotData.lotArea}m² ( ${numeroPorExtenso(lotData.lotArea)} )`
+      const months = [
+        'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+      ];
+      let today = new Date();
+      let day = today.getDate().toString().padStart(2, '0');
+      let month = (today.getMonth() + 1).toString().padStart(2, '0');
+      let year = today.getFullYear().toString();
+      let formattedDate = `Registro, ${day} de ${months[parseInt(month) - 1]} de ${year}`;
+      const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScehxZtP9jju-dIPukllTmtuc3h03eoGQT0DygtfNn5A-JmuQ/viewform';
+      const params = [
+        `entry.566285923=${lotData.divisionName}`,
+        `entry.1871930894=${lotData.lotName}`,
+        `entry.764727872=${lotData.divisionLocation}`,
+        `entry.1300828265=${lotMetricsFormatted}`,
+        `entry.1425417167=${formattedDate}`,
+        `entry.1576756638=${lotData.lotPrice}`,
+        `entry.1046238257=${lotData.entryValue}`,
+        `entry.284115857=${entryPercentageFormatted}`
+      ];
+      const formUrl = `${baseUrl}?${params.map(param => encodeURIComponent(param)).join('&')}`;
+      smtp.sendMail({
       from: process.env.EMAIL_USER,
       to:  mailList,
       replyTo: process.env.EMAIL_USER,
@@ -750,8 +843,8 @@ class salesController {
           <div class="card" style="background-color: #fff !important; width: 100%; padding: 20px; box-sizing: border-box; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px;">
               <img src="https://i.imgur.com/loaEjtY.png" alt="Logo BRIK" class="logo" style="width: 150px; margin-bottom: 30px;">
               <div class="title" style="width: 100%; text-align: center; font-size: 24px; font-weight: bold;">Olá ${buyer.name}</div>
-              <div class="subtitle" style="width: 80%; font-size: 18px; margin-top: 10px; margin-bottom: 20px; font-weight: 300;">Clique no link abaixo para preencher o formulário com as informações para a formalização do contrato referente ao processo de compra do lote "Lote 1", pertencente ao loteamento "Jardim Europa"</div>
-              <a href="https://docs.google.com/forms/d/e/1FAIpQLScehxZtP9jju-dIPukllTmtuc3h03eoGQT0DygtfNn5A-JmuQ/viewform?usp=pp_url&entry.566285923=TESTE-LOTEAMENTO&entry.1871930894=TESTE-LOTE&entry.764727872=TESTE-ENDERECO&entry.1300828265=TESTE-AREA" class="button" style="background-color: #63C600; margin-bottom: 50px; color: white; padding: 20px 50px; text-decoration: none; font-size: 24px; font-weight: bold; display: inline-block; cursor: pointer;">Preencher formulário</a>
+              <div class="subtitle" style="width: 80%; font-size: 18px; margin-top: 10px; margin-bottom: 20px; font-weight: 300;">Clique no link abaixo para preencher o formulário com as informações para a formalização do contrato referente ao processo de compra do lote "${lotData.lotName}", pertencente ao loteamento "${lotData.divisionName}"</div>
+              <a href="${formUrl}" class="button" style="background-color: #63C600; margin-bottom: 50px; color: white; padding: 20px 50px; text-decoration: none; font-size: 24px; font-weight: bold; display: inline-block; cursor: pointer;">Preencher formulário</a>
           </div>
       </body>
       </html>

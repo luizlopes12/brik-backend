@@ -774,6 +774,16 @@ class salesController {
     }
   };
 
+  static sendClickSignEmail = async (req, res) => {
+    // Fazer integração com a API da clicksign
+  }
+  static contractFilledObserver = async (req, res) => {
+    // Analisar quando um documento é preenchido
+  }
+}
+
+
+/* 
   static sentContractEmail = async (req, res) => {
     let {seller, buyer, lotData} = req.body
     const smtp = nodemailer.createTransport({
@@ -786,20 +796,7 @@ class salesController {
     });
 
     let mailList = [seller.email, buyer.email, process.env.EMAIL_USER]
-    /*
-      Receber:
-      Nome do loteamento
-      Endereço do loteamento
-      Nome do lote
-      Area do lote(dar um jeito de colocar o número por extenso)
-      Valor do lote
-      Valor de entrada (se houver) e porcentagem correspondente em relação ao valor do lote
 
-      Enviar:
-      Data atual, no formato Registro, dia 00 de mês de 0000
-      Porcentagem sobre o valor do lote
-      Email para o vendedor e comprador, com o formulário de compra preenchido
-    */
       let entryPercentage = (numeroPorExtenso((((lotData.entryValue / lotData.lotPrice) * 100))))
       let entryPercentageFormatted = `${(lotData.entryValue / lotData.lotPrice) * 100}% ( ${entryPercentage} )`
       let lotMetricsFormatted = `${lotData.lotArea}m² ( ${numeroPorExtenso(lotData.lotArea)} )`
@@ -812,7 +809,7 @@ class salesController {
       let month = (today.getMonth() + 1).toString().padStart(2, '0');
       let year = today.getFullYear().toString();
       let formattedDate = `Registro, ${day} de ${months[parseInt(month) - 1]} de ${year}`;
-      const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScehxZtP9jju-dIPukllTmtuc3h03eoGQT0DygtfNn5A-JmuQ/viewform';
+      const baseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSd4VOfWgJmPD-MPcLhFPF8lJCmJ1_f12K7Ot_M5HN76nZ5AGA/viewform';
       const params = [
         `entry.566285923=${lotData.divisionName}`,
         `entry.1871930894=${lotData.lotName}`,
@@ -855,6 +852,8 @@ class salesController {
       res.status(500).json({message: 'Erro ao enviar email cliente', error})
     })
   };
-}
+
+*/
+
 
 module.exports = salesController;

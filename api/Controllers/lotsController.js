@@ -47,6 +47,7 @@ class lotsController {
     }
     static listLots = async (req, res) =>{
         let list = await Lot.findAll({
+            order: [['createdAt', 'DESC']],
             include: [
             {
                 model: LotImage,

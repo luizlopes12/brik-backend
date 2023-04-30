@@ -7,6 +7,7 @@ const bannerRoutes = require('./bannerRoutes.js')
 const taxRoutes = require('./taxRoutes.js')
 const saleRoutes = require('./saleRoutes.js')
 const notificationRoutes = require('./notificationRoutes.js')
+const emailRoutes = require('./emailRoutes.js')
 
 const routes = (app) =>{
     app.use(
@@ -16,7 +17,8 @@ const routes = (app) =>{
         bannerRoutes,
         taxRoutes,
         saleRoutes,
-        notificationRoutes
+        notificationRoutes,
+        emailRoutes
     )
 }
 

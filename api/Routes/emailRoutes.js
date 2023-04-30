@@ -7,7 +7,7 @@ const router = express.Router()
 
 router
 .post('/email/home', emailController.sendContactemail)
-.post('/email/landing', emailController.sendContactemail)
+.post('/email/landing', emailController.sendContactemailFromLandingPage)
 
 
 module.exports = router

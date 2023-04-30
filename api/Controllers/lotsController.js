@@ -103,7 +103,9 @@ class lotsController {
             basePrice,
             finalPrice,
             description,
-            idLoteamento
+            idLoteamento,
+            userViews
+            
         } = req.body
         let updateLot = await Lot.update({
             hiddenPrice,
@@ -118,7 +120,8 @@ class lotsController {
             basePrice,
             finalPrice,
             description,
-            idLoteamento
+            idLoteamento,
+            userViews
         },
         {
             where: { id }

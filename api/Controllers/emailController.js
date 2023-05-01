@@ -78,7 +78,13 @@ class emailController {
         replyTo: replyList,
         subject: 'Solicitação de contato',
         html: `
-        <p>${message}</p>`
+        <p>
+         ${message}
+         <br>
+         Atencionamente, <br>
+          ${name} <br>
+          ${email}
+         </p>`
       };
 
     const mailToUserOptions = {

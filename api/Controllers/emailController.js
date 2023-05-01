@@ -167,7 +167,7 @@ class emailController {
         from: process.env.EMAIL_USER,
         to: email,
         replyTo: replyList,
-        subject: 'Solicitação de contato',
+        subject: 'Agenda de visita',
         html: `
         <p>Olá ${name.split(' ')[0]}, obrigado por entrar em contato!</p><br>
         <p>Recebemos sua solicitação de visita, em breve retornaremos com a confirmação!</p><br>
@@ -189,7 +189,7 @@ class emailController {
         res.status(500).json({message: 'Erro ao enviar email.'});
       } else {
         transporter.sendMail(mailToUserOptions, (error, info) => {});
-        res.status(200).json({message: 'Email enviado com sucesso!'});
+        res.status(200).json({message: 'Agenda enviada com sucesso!'});
       }
     });
   }

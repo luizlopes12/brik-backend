@@ -124,9 +124,8 @@ class emailController {
       portionsQuantity
      } = req.body;
      let portionsMessage = portionsQuantity ? `<p>Este cliente fez asimulação para ${portionsQuantity} parcelas,
-      no valor de R$ ${portionValue} cada.</p>` : '';
+      no valor de R$ ${portionValue} cada.</p><br>` : '';
 
-     //Formatando data para o padrão brasileiro
       let dateArray = date.split('-');
       let dateFormated = `${dateArray[2]}/${dateArray[1]}/${dateArray[0]}`;
 
@@ -157,8 +156,7 @@ class emailController {
         <p>Lote: ${lotName}</p>
         <p>Valor: ${lotPrice}</p>
         <p>Loteamento: ${divisionName}</p>
-        <p>Localização: ${lotLocation}</p><br>
-        ${portionsMessage}<br>
+        <p>Localização: ${lotLocation}</p><br>${portionsMessage}<br>
         <p>Atenciosamente, <br> ${name} <br> ${email}</p>
         `
       };
@@ -177,7 +175,7 @@ class emailController {
         <p>Valor: ${lotPrice}</p>
         <p>Loteamento: ${divisionName}</p>
         <p>Localização: ${lotLocation}</p><br>
-        ${portionsMessage}<br>
+        ${portionsMessage}
         <p>Atenciosamente, <br> Atendimento BRIK <br> ${process.env.EMAIL_USER}</p>
         `
         };

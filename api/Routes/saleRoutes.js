@@ -10,6 +10,7 @@ router
 .get('/sales/list', salesController.listAllSales)
 .get('/sales/list/:id', salesController.listSaleById)
 .get('/sales/resume', salesController.getChartData)
+.get('/sales/overview', salesController.getSalesOverview)
 .post('/sales/create', salesController.createSaleAndTheirAnualParcels)
 .post('/sales/status/update', salesController.updateSaleStatus)
 .post('/sales/contract/email/send', salesController.sendClickSignEmail)

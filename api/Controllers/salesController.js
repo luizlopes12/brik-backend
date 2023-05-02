@@ -780,6 +780,59 @@ class salesController {
   static contractFilledObserver = async (req, res) => {
     // Analisar quando um documento é preenchido
   }
+
+
+  static getSalesOverview = async (req, res) => {
+    // get the quantity of Lots, Divisions and Sales registered on database this month
+    try {
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today - 30 * 24 * 60 * 60 * 1000);
+      const sales = await Sale.findAll({
+        attributes: [
+          [Sequelize.fn("COUNT", Sequelize.col("id")), "salesQuantity"],
+        ],
+        where: {
+          createdAt: {
+            [Op.gte]: thirtyDaysAgo,
+            [Op.lt]: today,
+          },
+        },
+        raw: true,
+      });
+      const lots = await Lot.findAll({
+        attributes: [
+          [Sequelize.fn("COUNT", Sequelize.col("id")), "lotsQuantity"],
+        ],
+        where: {
+          createdAt: {
+            [Op.gte]: thirtyDaysAgo,
+            [Op.lt]: today,
+          },
+        },
+        raw: true,
+      });
+      const divisions = await Division.findAll({
+        attributes: [
+          [Sequelize.fn("COUNT", Sequelize.col("id")), "divisionsQuantity"],
+        ],
+        where: {
+          createdAt: {
+            [Op.gte]: thirtyDaysAgo,
+            [Op.lt]: today,
+          },
+        },
+        raw: true,
+      });
+      res.status(200).json({ sales: sales[0], lots: lots[0], divisions: divisions[0] });
+    } catch (error) {
+      res
+        .status(500)
+        .json({
+          message: "Ocorreu um erro ao processar a requisição",
+          error,
+        });
+    }
+  }
 }
 
 

@@ -11,6 +11,7 @@ router
 .get('/sales/list/:id', salesController.listSaleById)
 .get('/sales/resume', salesController.getChartData)
 .get('/sales/overview', salesController.getSalesOverview)
+.get('/sales/contract/webhook', salesController.getClickSignUpdates)
 .post('/sales/create', salesController.createSaleAndTheirAnualParcels)
 .post('/sales/status/update', salesController.updateSaleStatus)
 .post('/sales/contract/email/send', salesController.sendClickSignEmail)

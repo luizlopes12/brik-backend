@@ -833,6 +833,15 @@ class salesController {
         });
     }
   }
+
+  static getClickSignUpdates = async (req, res) => {
+    // POST /api/v1/documents?access_token={{access_token}} HTTP/1.1
+    // Host: sandbox.clicksign.com
+    // Content-Type: application/json
+    // Accept: application/json
+    
+    console.log('getClickSignUpdates')
+  }
 }
 
 

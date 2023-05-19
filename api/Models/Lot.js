@@ -44,7 +44,7 @@ const Lot = db.connection.define('Lotes', {
         required: false,
     },
     description: {
-        type: db.Sequelize.STRING,
+        type: db.Sequelize.TEXT('long'),
         required: false,
     },
     isAvaible:{

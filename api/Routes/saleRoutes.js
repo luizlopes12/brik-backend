@@ -14,5 +14,6 @@ router
 .get('/sales/contract/webhook', salesController.getClickSignUpdates)
 .post('/sales/create', salesController.createSaleAndTheirAnualParcels)
 .post('/sales/status/update', salesController.updateSaleStatus)
+.post('/sales/contract/fill', salesController.fillContract)
 .post('/sales/contract/email/send', salesController.sendClickSignEmail)
 module.exports = router

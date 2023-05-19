@@ -13,6 +13,7 @@ const DivisionPartner = require("../Models/DivisionPartner");
 const { Op } = require("sequelize");
 const { Sequelize } = require("../config/database");
 const nodemailer = require("nodemailer");
+const Contract = require("../Models/Contract");
 
 /*
 regras:
@@ -31,37 +32,82 @@ const options = {
 const gerencianet = new Gerencianet(options);
 
 const numeroPorExtenso = (num) => {
-  let unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
-  let dezenas = ['', 'dez', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
-  let especiais = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
-  let milhares = ['', 'mil', 'milhões', 'bilhões', 'trilhões', 'quatrilhões', 'quintilhões', 'sextilhões', 'setilhões', 'octilhões', 'nonilhões'];
-  
+  let unidades = [
+    "",
+    "um",
+    "dois",
+    "três",
+    "quatro",
+    "cinco",
+    "seis",
+    "sete",
+    "oito",
+    "nove",
+  ];
+  let dezenas = [
+    "",
+    "dez",
+    "vinte",
+    "trinta",
+    "quarenta",
+    "cinquenta",
+    "sessenta",
+    "setenta",
+    "oitenta",
+    "noventa",
+  ];
+  let especiais = [
+    "dez",
+    "onze",
+    "doze",
+    "treze",
+    "quatorze",
+    "quinze",
+    "dezesseis",
+    "dezessete",
+    "dezoito",
+    "dezenove",
+  ];
+  let milhares = [
+    "",
+    "mil",
+    "milhões",
+    "bilhões",
+    "trilhões",
+    "quatrilhões",
+    "quintilhões",
+    "sextilhões",
+    "setilhões",
+    "octilhões",
+    "nonilhões",
+  ];
+
   if (num === 0) {
-    return 'zero';
+    return "zero";
   }
-  
-  let extenso = '';
+
+  let extenso = "";
   let resto = num;
-  
+
   for (let i = 9; i >= 0; i--) {
     let potencia = 10 ** (3 * i);
     let parte = Math.floor(resto / potencia);
     resto -= parte * potencia;
-    
+
     if (parte === 0) {
       continue;
     }
-    
-    let centenas = '';
-    let dezenasEspeciais = '';
-    let dezenasVazias = '';
-    let unidadesExtenso = '';
-    
+
+    let centenas = "";
+    let dezenasEspeciais = "";
+    let dezenasVazias = "";
+    let unidadesExtenso = "";
+
     if (parte >= 100) {
       centenas = `${unidades[parte / 100]}cento `;
       parte %= 100;
     }
-    
+
     if (parte >= 10 && parte < 20) {
       dezenasEspeciais = `${especiais[parte - 10]} `;
       parte = 0;
@@ -69,21 +115,17 @@ const numeroPorExtenso = (num) => {
       dezenasVazias = `${dezenas[parte / 10]} `;
       parte %= 10;
     }
-    
+
     if (parte >= 1 && parte <= 9) {
       unidadesExtenso = `${unidades[parte]} `;
     }
-    
+
     let milharExtenso = milhares[i];
     extenso += `${centenas}${dezenasEspeciais}${dezenasVazias}${unidadesExtenso}${milharExtenso} `;
   }
-  
+
   return extenso.trim();
-}
-
-
-
-
+};
 
 class salesController {
   static verifyDiscount = async (discount) => {
@@ -97,6 +139,21 @@ class salesController {
     }
   };
   static createParcels = async (quantity, saleData, salePriceFromRequest) => {
+    console.log("AAAAAAAAAAAAAAAAAAAA", saleData.lotes.id)
+    let selectedContract = await Contract.findOne({
+      where: {
+        loteId: saleData.lotes.id,
+      },
+    });
+    
+    saleData.users = {};
+    
+    saleData.users.name = await selectedContract.name;
+    saleData.users.email = await selectedContract.email;
+    saleData.users.CPF = await selectedContract.cpf;
+    saleData.users.phone = await selectedContract.telefone;
+    
+
     saleData.salePrice = salePriceFromRequest;
     let salePrice;
     let anualValue;
@@ -333,8 +390,7 @@ class salesController {
               },
             },
             metadata: {
-              notification_url:
-                process.env.NGROK_URL + "/sales/status/update",
+              notification_url: process.env.NGROK_URL + "/sales/status/update",
             },
             // Porcentagem de acrescimo apos o vencimento
           };
@@ -494,7 +550,6 @@ class salesController {
       variableTaxPercetage,
       contract,
       loteId,
-      buyerId,
       parcelsQuantity,
       entryValue,
       discountPercentage,
@@ -513,7 +568,6 @@ class salesController {
       variableTaxPercetage,
       contract,
       loteId,
-      buyerId,
       entryValue,
       parcelsQuantity,
     });
@@ -585,12 +639,10 @@ class salesController {
             });
             if (saleCreatedData) {
               await Lot.update({ isSolded: true }, { where: { id: loteId } });
-              res
-                .status(200)
-                .json({
-                  message: "Venda criada com sucesso!",
-                  data: saleCreatedData,
-                });
+              res.status(200).json({
+                message: "Venda criada com sucesso!",
+                data: saleCreatedData,
+              });
             } else {
               res.status(400).json({ message: "Erro ao criar venda" });
             }
@@ -716,7 +768,7 @@ class salesController {
     try {
       const today = new Date();
       const thirtyDaysAgo = new Date(today - 30 * 24 * 60 * 60 * 1000);
-  
+
       const monthlyResults = await Sale.findAll({
         attributes: [
           [Sequelize.fn("MONTH", Sequelize.col("saleDate")), "month"],
@@ -724,7 +776,10 @@ class salesController {
           [Sequelize.fn("SUM", Sequelize.col("salePrice")), "sumOfSales"],
           [Sequelize.fn("COUNT", Sequelize.col("id")), "salesQuantity"],
         ],
-        group: [Sequelize.fn("MONTH", Sequelize.col("saleDate")),Sequelize.fn("YEAR", Sequelize.col("saleDate"))],
+        group: [
+          Sequelize.fn("MONTH", Sequelize.col("saleDate")),
+          Sequelize.fn("YEAR", Sequelize.col("saleDate")),
+        ],
         where: {
           createdAt: {
             [Op.gte]: new Date(new Date().getFullYear(), 0, 1),
@@ -733,13 +788,13 @@ class salesController {
         },
         raw: true,
       });
-  
+
       const monthlySummary = monthlyResults.map((result) => ({
-        month: `${result.month.toString().padStart(2, '0')}/${result.year}`,
+        month: `${result.month.toString().padStart(2, "0")}/${result.year}`,
         sumOfSales: parseInt(result.sumOfSales),
         salesQuantity: parseInt(result.salesQuantity),
       }));
-  
+
       const dailyResults = await Sale.findAll({
         attributes: [
           [Sequelize.fn("DAY", Sequelize.col("saleDate")), "day"],
@@ -747,7 +802,10 @@ class salesController {
           [Sequelize.fn("SUM", Sequelize.col("salePrice")), "sumOfSales"],
           [Sequelize.fn("COUNT", Sequelize.col("id")), "salesQuantity"],
         ],
-        group: [Sequelize.fn("DAY", Sequelize.col("saleDate")), Sequelize.fn("MONTH", Sequelize.col("saleDate"))],
+        group: [
+          Sequelize.fn("DAY", Sequelize.col("saleDate")),
+          Sequelize.fn("MONTH", Sequelize.col("saleDate")),
+        ],
         where: {
           saleDate: {
             [Op.gte]: thirtyDaysAgo,
@@ -756,31 +814,293 @@ class salesController {
         },
         raw: true,
       });
-  
+
       const dailySummary = dailyResults.map((result) => ({
-        day: `${result.day.toString().padStart(2, '0')}/${result.month.toString().padStart(2, '0')}`,
+        day: `${result.day.toString().padStart(2, "0")}/${result.month
+          .toString()
+          .padStart(2, "0")}`,
         sumOfSales: parseInt(result.sumOfSales),
         salesQuantity: parseInt(result.salesQuantity),
       }));
-  
+
       res.status(200).json({ monthlySummary, dailySummary });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          message: "An error occurred while processing your request",
-          error,
-        });
+      res.status(500).json({
+        message: "An error occurred while processing your request",
+        error,
+      });
     }
   };
 
   static sendClickSignEmail = async (req, res) => {
-    // Fazer integração com a API da clicksign
-  }
+    const { name: buyerName, email: buyerEmail } = req.body.buyer;
+    const { name: sellerName, email: sellerEmail } = req.body.seller;
+    const { loteId } = req.body;
+    const urlToForm = `${process.env.FRONTEND_URL}contract/form/${loteId}`;
+    const selectedLote = await Lot.findByPk(loteId);
+    const loteDivision = await Division.findByPk(selectedLote.idLoteamento);
+    console.log(req.body.initDate)
+    await Contract.create({
+      loteId: loteId,
+      divisionId: selectedLote.idLoteamento,
+      corretageValue: `${numeroPorExtenso(selectedLote.taxPercentage)} por cento`,
+      corretagePercent: selectedLote.taxPercentage,
+      name: buyerName,
+      email: buyerEmail,
+      price: selectedLote.finalPrice,
+      entryValue: req.body.entryValue,
+      initDate: req.body.initDate,
+      parcelAmount: req.body.parcelsQuantity,
+      sellerEmail,
+      isOpened: true
+    });
+
+
+    const smtp = nodemailer.createTransport({
+      host: 'smtp.umbler.com',
+      port: 587,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // send an email to the buyer and seller with the contract link
+    const buyerEmailResponse = await smtp.sendMail({
+      from: process.env.EMAIL_USER,
+      to: buyerEmail,
+      subject: "Contrato de compra e venda",
+      html: `<p>Olá ${buyerName},</p>
+      <p>Segue o link para o contrato de compra e venda do lote ${selectedLote.name}, pertencente ao loteamento ${loteDivision.name}:</p>
+      <p><a href="${urlToForm}">${urlToForm}</a></p>
+      <p>Atenciosamente,</p>
+      <p>Equipe BRIK Empreendimentos</p>`,
+    });
+
+    if(buyerEmailResponse){
+      res.status(200).json({ message: "Contrato enviado com sucesso" });
+    }else{
+      res.status(500).json({ message: "Erro ao enviar o contrato" });
+    }
+
+
+
+    // const { name: buyerName, email: buyerEmail } = req.body.buyer
+    // const { name: sellerName, email: sellerEmail } = req.body.seller
+    // const { loteId } = req.body
+
+    // const lote = await Lot.findByPk(loteId, {
+    //   include: [
+    //     {
+    //       model: Partner,
+    //       as: "lotePartners",
+    //       required: false,
+    //     },
+    //   ],
+    // });
+    // await fetch(
+    //   `https://sandbox.clicksign.com/api/v1/templates/${process.env.CS_CONTRACT_ID}/documents?access_token=${process.env.CS_ACESS_TOKEN}`,
+    //   {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       "Accept": "application/json",
+    //     },
+    //     body: JSON.stringify({
+    //       "document": {
+    //         "path": "/Modelos/Modelo de contrato.docx",
+    //         "template":{
+    //           "data": {
+    //             "nomeCliente": "Teste 3",
+    //             "cpfCliente": "Teste 4",
+    //             "rgCliente": "Teste 5",
+    //             "enderecoCliente": "Teste 6",
+    //             "nacionalidadeCliente": "Teste 7",
+    //             "profissaoCliente": "Teste 8",
+    //             "telefoneCliente": "Teste 9"
+    //           }
+    //         }
+    //       }
+    //     })
+        
+    //   } 
+    // ) 
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     res.status(200).json({message: "Contrato enviado com sucesso", data});
+    //   })
+    //   .catch((err) => res.status(500).json({message: "Erro ao enviar contrato", err}));
+  };
+
+  static fillContract = async (req, res) => {
+    try {
+      // fill the contract with the data from the form
+      const {
+        loteId,
+        name,
+        email,
+        cpf,
+        rg,
+        endereco,
+        nacionalidade,
+        profissao,
+        telefone,
+      } = req.body;
+      
+      const lote = await Lot.findByPk(loteId);
+      const loteDivision = await Division.findByPk(lote.idLoteamento);
+      let contract = await Contract.findOne({
+        where: {
+          loteId: loteId,
+          isOpened: true,
+        },
+      });
+      let contractFiller
+      if(contract){
+      contractFiller = await Contract.update({
+        name,
+        email,
+        cpf,
+        rg,
+        endereco,
+        nacionalidade,
+        profissao,
+        telefone,
+        isOpened: false,
+      }, { where: { id: contract.id } });
+      }
+      if(contractFiller){
+        console.log(contractFiller.initDate)
+        let saleYear = contractFiller.initDate.getFullYear();
+        let saleMonth = String(contractFiller.initDate.getMonth() + 1).padStart(2, '0');
+        let saleDay = String(contractFiller.initDate.getDate()).padStart(2, '0');
+      const formattedSaleDate = `${saleYear}-${saleMonth}-${saleDay}`;
+        const formatter = new Intl.NumberFormat('pt-br', { style: 'currency', currency: 'BRL' });
+        const imovelPreco = formatter.format(lote.finalPrice);
+        const saleCreation = await fetch('http://localhost:8080/sales/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            "saleDate": formattedSaleDate,
+            "salePrice": contractFiller.price,
+            "entryValue": contractFiller.entryValue,
+            "commission": 0,
+            "discountPercentage": 0,
+            "fixedTaxPercetage": contractFiller.corretagePercent,
+            "variableTaxPercetage": 0,
+            "contract": "",
+            "loteId": contractFiller.loteId,
+            "parcelsQuantity": contractFiller.parcelAmount,
+          })
+        });
+        
+        let saleSelected = await Sale.findOne({
+          where: {
+            loteId: contractFiller.loteId,
+          },
+          include: [
+            {
+              model: Parcel,
+              as: "parcelas",
+              required: true,
+            },
+          ],
+        });
+        console.log("AAAAAAAAAAAAAAAAAAAA TESTE AAAAAAAAAAAAAAAAAAAAAA")
+        let updatedContract = await contract.update({
+          parcelValue: saleSelected.parcelas[saleSelected.parcelas.length - 1].value,
+        });
+        
+
+        const response = await fetch(
+          `https://sandbox.clicksign.com/api/v1/templates/${process.env.CS_CONTRACT_ID}/documents?access_token=${process.env.CS_ACESS_TOKEN}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: JSON.stringify({
+              "document": {
+                "path": "/Modelos/Modelo de contrato.docx",
+                "template": {
+                  "data": {
+                    "pessoaFisica": "Pessoa Física",
+                    "nomeCliente": contractFiller.name,
+                    "cpfCliente": contractFiller.cpf,
+                    "rgCliente": contractFiller.rg,
+                    "enderecoCliente": contractFiller.endereco,
+                    "nacionalidadeCliente": contractFiller.nacionalidade,
+                    "profissaoCliente": contractFiller.profissao,
+                    "telefoneCliente": contractFiller.telefone,
+                    "loteamentoNome": loteDivision.name,
+                    "loteamentoEndereco": loteDivision.location,
+                    "imovelDesc": lote.description,
+                    "imovelPreco": imovelPreco,
+                    "quantidadeParcelas": contractFiller.parcelAmount,
+                    "valorParcela": `
+                    ${
+                      saleSelected.parcelas.forEach((parcela) => {
+                        let dateString = parcela.expireDate;
+                        let date = new Date(dateString);
+                
+                        let formattedDate = date.toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        });
+                        return `${formatter.format(parcela.value)} para o dia ${formattedDate}`
+                      }
+                    )
+                    }
+                    
+                    `,
+                  }
+                }
+              }
+            })
+          }
+
+        );
+
+      const data = await response.json();
+      
+      await Contract.update(
+        {
+          documentKey: data.document.key,
+        },
+        {
+          where: {
+            loteId: contractFiller.loteId,
+          },
+        }
+      );
+      await Sale.update(
+        {
+          contract: data.document.key,
+        },
+        {
+          where: {
+            loteId: contractFiller.loteId,
+          },
+        }
+      );
+
+
+      res.status(200).json({ message: "Contrato enviado com sucesso", data });
+      }
+    } catch (err) {
+      console.error("Error filling the contract:", err);
+      res.status(500).json({ message: "Error filling the contract", error: err.message });
+    }
+    
+  };
+  
   static contractFilledObserver = async (req, res) => {
     // Analisar quando um documento é preenchido
-  }
-
+  };
 
   static getSalesOverview = async (req, res) => {
     // get the quantity of Lots, Divisions and Sales registered on database this month
@@ -823,27 +1143,26 @@ class salesController {
         },
         raw: true,
       });
-      res.status(200).json({ sales: sales[0], lots: lots[0], divisions: divisions[0] });
-    } catch (error) {
       res
-        .status(500)
-        .json({
-          message: "Ocorreu um erro ao processar a requisição",
-          error,
-        });
+        .status(200)
+        .json({ sales: sales[0], lots: lots[0], divisions: divisions[0] });
+    } catch (error) {
+      res.status(500).json({
+        message: "Ocorreu um erro ao processar a requisição",
+        error,
+      });
     }
-  }
+  };
 
   static getClickSignUpdates = async (req, res) => {
-    // POST /api/v1/documents?access_token={{access_token}} HTTP/1.1
+    // POST /api/v1/documents?access_token= HTTP/1.1
     // Host: sandbox.clicksign.com
     // Content-Type: application/json
     // Accept: application/json
-    
-    console.log('getClickSignUpdates')
-  }
-}
 
+    console.log("getClickSignUpdates");
+  };
+}
 
 /* 
   static sentContractEmail = async (req, res) => {
@@ -916,6 +1235,5 @@ class salesController {
   };
 
 */
-
 
 module.exports = salesController;

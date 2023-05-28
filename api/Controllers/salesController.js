@@ -139,7 +139,6 @@ class salesController {
     }
   };
   static createParcels = async (quantity, saleData, salePriceFromRequest) => {
-    console.log("AAAAAAAAAAAAAAAAAAAA", saleData.lotes.id)
     let selectedContract = await Contract.findOne({
       where: {
         loteId: saleData.lotes.id,
@@ -291,6 +290,7 @@ class salesController {
             return false;
           });
         parcelsCreated.flat();
+
       }
       /* Se o valor de entrada > 0, criar 1 boleto com o valor da entrada e as demais parcelas */
       if (quantity > 1 && entryValue > 0) {
@@ -619,6 +619,8 @@ class salesController {
         ],
       })
         .then(async (sale) => {
+          // sale.entryValue = entryValue;
+          console.log(entryValue)
           sale.users = {
             name: userInfo.name,
             email: userInfo.email,
@@ -990,16 +992,16 @@ class salesController {
       }, { where: { id: contract.id } })  
 
       let contractFiller = await Contract.findByPk(contract.id)
-      
+      console.log('\x1b[36m%s\x1b[0m','contractFiller:', contractFiller)
 
-        // console.log(contractFiller.initDate)
         let saleYear = contractFiller.initDate.getFullYear();
         let saleMonth = String(contractFiller.initDate.getMonth() + 1).padStart(2, '0');
         let saleDay = String(contractFiller.initDate.getDate()).padStart(2, '0');
         const formattedSaleDate = `${saleYear}-${saleMonth}-${saleDay}`;
         const formatter = new Intl.NumberFormat('pt-br', { style: 'currency', currency: 'BRL' });
         const imovelPreco = formatter.format(lote.finalPrice);
-        const saleCreation = await fetch('http://localhost:8080/sales/create', {
+        const imovelTaxValue = formatter.format((((lote.taxPercentage/10)*lote.finalPrice)));
+        const saleCreation = await fetch('https://brik-backend.onrender.com/sales/create', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1030,14 +1032,14 @@ class salesController {
             },
           ],
         });
-        console.log('\x1b[36m%s\x1b[0m','saleSelected:', saleSelected)
+        // console.log('\x1b[36m%s\x1b[0m','saleSelected:', saleSelected)
         
         
         if (!saleSelected) {
           console.log("No sale found for the given loteId");
           // Add appropriate error handling or fallback logic here
         } else {
-          console.log("Sale found:", saleSelected);
+          // console.log("Sale found:", saleSelected);
           let updatedContract = await contract.update({
             parcelValue: saleSelected.parcelas[saleSelected.parcelas.length - 1].value,
           });
@@ -1071,6 +1073,8 @@ class salesController {
                     "imovelDesc": lote.description,
                     "imovelPreco": imovelPreco,
                     "loteMetragem": lote.metrics,
+                    "valorCorretagem": imovelTaxValue,
+                    "percentualCorretagem": `${lote.taxPercentage}% (${numeroPorExtenso(lote.taxPercentage)} por cento)`,
                     "loteMetragemExtenso": numeroPorExtenso(Number(lote.metrics)),
                     "quantidadeParcelas": contractFiller.parcelAmount,
                     "valorParcela": `
@@ -1120,10 +1124,11 @@ class salesController {
           },
         }
       );
-      res.status(200).json({ message: "Contrato enviado com sucesso", data });
+
+      res.status(200).json({ message: "Contrato preenchido com sucesso", data });
     } catch (err) {
       console.error("Error filling the contract:", err);
-      res.status(500).json({ message: "Error filling the contract", error: err.message });
+      res.status(500).json({ message: "Ocorreu um erro, entre em contato com o vendedor e tente novamente.", error: err.message });
       res.end();
     }
   };

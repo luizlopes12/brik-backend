@@ -7,7 +7,9 @@ const Contract = db.connection.define('Contratos', {
     documentKey: {
         type: db.Sequelize.STRING,
     },
-
+    entryValue: {
+        type: db.Sequelize.FLOAT,
+    },
     loteId: {
         type: db.Sequelize.INTEGER,
     },

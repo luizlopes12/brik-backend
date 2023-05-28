@@ -26,7 +26,7 @@ const io = require('socket.io')(app)
 
 
 
-module.exports = cron.schedule('* * * * *', async () => {
+module.exports = cron.schedule('0 0 1 * *', async () => {
     let accumulatedIGPMValue = await fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.4175/dados?formato=json')
         .then(response => response.json())
         .then(data => {

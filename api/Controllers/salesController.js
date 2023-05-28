@@ -286,7 +286,10 @@ class salesController {
               chargeId: chargeRes.data.charge_id,
             });
           })
-          .catch((err) => console.log(err));
+          .catch((err) => {
+            console.log(err);
+            return false;
+          });
         parcelsCreated.flat();
       }
       /* Se o valor de entrada > 0, criar 1 boleto com o valor da entrada e as demais parcelas */
@@ -458,6 +461,7 @@ class salesController {
               })
               .catch((err) => {
                 console.log(err);
+                return false;
               });
           })
           .finally(() => {
@@ -515,6 +519,10 @@ class salesController {
               });
             });
           })
+          .catch((err) => {
+            console.log(err);
+            return false;
+          })
           .finally(() => {
             parcelsCreated = parcelsCreated.reduce(
               (acc, val) => acc.concat(val),
@@ -554,6 +562,12 @@ class salesController {
       entryValue,
       discountPercentage,
     } = req.body;
+    let userInfo = await Contract.findOne({
+      where: {
+        loteId: loteId,
+      },
+    });
+    
     // commission = desconto(em porcentagem)
     let createdSale = await Sale.create({
       saleDate,
@@ -605,11 +619,18 @@ class salesController {
         ],
       })
         .then(async (sale) => {
+          sale.users = {
+            name: userInfo.name,
+            email: userInfo.email,
+            CPF: userInfo.cpf,
+            phone: userInfo.telefone,
+          };
           let saleParcels = await this.createParcels(
             parcelsQuantity,
             sale,
             salePrice
           );
+          
           if (saleParcels) {
             let saleCreatedData = await Sale.findByPk(createdSale.id, {
               include: [
@@ -835,12 +856,12 @@ class salesController {
   static sendClickSignEmail = async (req, res) => {
     const { name: buyerName, email: buyerEmail } = req.body.buyer;
     const { name: sellerName, email: sellerEmail } = req.body.seller;
-    const { loteId } = req.body;
+    const { loteId, parcelsQuantity, entryValue, initDate} = req.body;
     const urlToForm = `${process.env.FRONTEND_URL}contract/form/${loteId}`;
     const selectedLote = await Lot.findByPk(loteId);
     const loteDivision = await Division.findByPk(selectedLote.idLoteamento);
-    console.log(req.body.initDate)
-    await Contract.create({
+    let contractInitDate = new Date(initDate.toString());
+    let contractCreated = await Contract.create({
       loteId: loteId,
       divisionId: selectedLote.idLoteamento,
       corretageValue: `${numeroPorExtenso(selectedLote.taxPercentage)} por cento`,
@@ -848,9 +869,9 @@ class salesController {
       name: buyerName,
       email: buyerEmail,
       price: selectedLote.finalPrice,
-      entryValue: req.body.entryValue,
-      initDate: req.body.initDate,
-      parcelAmount: req.body.parcelsQuantity,
+      entryValue: entryValue,
+      initDate: contractInitDate,
+      parcelAmount: parcelsQuantity,
       sellerEmail,
       isOpened: true
     });
@@ -878,7 +899,7 @@ class salesController {
     });
 
     if(buyerEmailResponse){
-      res.status(200).json({ message: "Contrato enviado com sucesso" });
+      res.status(200).json({ message: "Contrato enviado com sucesso",  contractCreated});
     }else{
       res.status(500).json({ message: "Erro ao enviar o contrato" });
     }
@@ -954,10 +975,9 @@ class salesController {
           loteId: loteId,
           isOpened: true,
         },
-      });
-      let contractFiller
-      if(contract){
-      contractFiller = await Contract.update({
+      })   
+      
+      await Contract.update({
         name,
         email,
         cpf,
@@ -967,14 +987,16 @@ class salesController {
         profissao,
         telefone,
         isOpened: false,
-      }, { where: { id: contract.id } });
-      }
-      if(contractFiller){
-        console.log(contractFiller.initDate)
+      }, { where: { id: contract.id } })  
+
+      let contractFiller = await Contract.findByPk(contract.id)
+      
+
+        // console.log(contractFiller.initDate)
         let saleYear = contractFiller.initDate.getFullYear();
         let saleMonth = String(contractFiller.initDate.getMonth() + 1).padStart(2, '0');
         let saleDay = String(contractFiller.initDate.getDate()).padStart(2, '0');
-      const formattedSaleDate = `${saleYear}-${saleMonth}-${saleDay}`;
+        const formattedSaleDate = `${saleYear}-${saleMonth}-${saleDay}`;
         const formatter = new Intl.NumberFormat('pt-br', { style: 'currency', currency: 'BRL' });
         const imovelPreco = formatter.format(lote.finalPrice);
         const saleCreation = await fetch('http://localhost:8080/sales/create', {
@@ -1008,10 +1030,19 @@ class salesController {
             },
           ],
         });
-        console.log("AAAAAAAAAAAAAAAAAAAA TESTE AAAAAAAAAAAAAAAAAAAAAA")
-        let updatedContract = await contract.update({
-          parcelValue: saleSelected.parcelas[saleSelected.parcelas.length - 1].value,
-        });
+        console.log('\x1b[36m%s\x1b[0m','saleSelected:', saleSelected)
+        
+        
+        if (!saleSelected) {
+          console.log("No sale found for the given loteId");
+          // Add appropriate error handling or fallback logic here
+        } else {
+          console.log("Sale found:", saleSelected);
+          let updatedContract = await contract.update({
+            parcelValue: saleSelected.parcelas[saleSelected.parcelas.length - 1].value,
+          });
+          // Rest of the code
+        }
         
 
         const response = await fetch(
@@ -1039,6 +1070,8 @@ class salesController {
                     "loteamentoEndereco": loteDivision.location,
                     "imovelDesc": lote.description,
                     "imovelPreco": imovelPreco,
+                    "loteMetragem": lote.metrics,
+                    "loteMetragemExtenso": numeroPorExtenso(Number(lote.metrics)),
                     "quantidadeParcelas": contractFiller.parcelAmount,
                     "valorParcela": `
                     ${
@@ -1087,15 +1120,12 @@ class salesController {
           },
         }
       );
-
-
       res.status(200).json({ message: "Contrato enviado com sucesso", data });
-      }
     } catch (err) {
       console.error("Error filling the contract:", err);
       res.status(500).json({ message: "Error filling the contract", error: err.message });
+      res.end();
     }
-    
   };
   
   static contractFilledObserver = async (req, res) => {

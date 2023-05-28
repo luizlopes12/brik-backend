@@ -55,7 +55,7 @@ const Contract = db.connection.define('Contratos', {
         type: db.Sequelize.FLOAT,
     },
     initDate: {
-        type: db.Sequelize.STRING,
+        type: db.Sequelize.DATE,
     },
     isOpened: {
         type: db.Sequelize.BOOLEAN,

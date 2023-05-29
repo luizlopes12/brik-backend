@@ -14,6 +14,7 @@ const { Op } = require("sequelize");
 const { Sequelize } = require("../config/database");
 const nodemailer = require("nodemailer");
 const Contract = require("../Models/Contract");
+const io = require('../io.js');
 
 /*
 regras:
@@ -991,10 +992,10 @@ class salesController {
         isOpened: false,
       }, { where: { id: contract.id } })  
 
-      let contractFiller = await Contract.findByPk(contract.id)
-      console.log('\x1b[36m%s\x1b[0m','contractFiller:', contractFiller)
+      let contractFiller = await Contract.findByPk(contract.id) 
+      // console.log('\x1b[36m%s\x1b[0m','contractFiller:', contractFiller)
 
-        let saleYear = contractFiller.initDate.getFullYear();
+        let saleYear = contractFiller.initDate.getFullYear(); 
         let saleMonth = String(contractFiller.initDate.getMonth() + 1).padStart(2, '0');
         let saleDay = String(contractFiller.initDate.getDate()).padStart(2, '0');
         const formattedSaleDate = `${saleYear}-${saleMonth}-${saleDay}`;
@@ -1124,8 +1125,14 @@ class salesController {
           },
         }
       );
-
+      console.log('\x1b[36m%s\x1b[0m','O socket deveria executar aqui')
+      console.log('\x1b[36m%s\x1b[0m','---------------------------------')
+      
+      io.emit("notification", { message: "Nova notificação recebida" });
+        
+      console.log('\x1b[36m%s\x1b[0m','---------------------------------')
       res.status(200).json({ message: "Contrato preenchido com sucesso", data });
+      
     } catch (err) {
       console.error("Error filling the contract:", err);
       res.status(500).json({ message: "Ocorreu um erro, entre em contato com o vendedor e tente novamente.", error: err.message });

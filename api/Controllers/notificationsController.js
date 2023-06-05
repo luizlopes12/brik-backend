@@ -3,6 +3,22 @@ const User = require('../Models/User')
 
 
 class notificationsController {
+    static createNotification = async (req, res) => {
+        const { title, description, actionLink } = req.body;
+        if (!title || !description) {
+            return res.status(400).json({ message: 'Dados inválidos' })
+        }
+        const notification = await Notification.create({
+            title,
+            description,
+            actionLink,
+        })
+        if (!notification) {
+            return res.status(500).json({ message: 'Erro no servidor' })
+        }
+        return res.status(201).json({ message: 'Notificação criada com sucesso' })
+    }
+
     static listAllNotifications = async (req, res) => {
         const notifications = await Notification.findAll({
             attributes: ['id', 'title', 'description', 'actionLink', 'opened', 'createdAt'],

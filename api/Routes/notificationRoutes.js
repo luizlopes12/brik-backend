@@ -7,6 +7,7 @@ const jwtAuth = require('../middlewares/jwtAuth.js')
 
 router
 .get('/notifications/list', jwtAuth, notificationsController.listAllNotifications)
+.post('/notifications/create', notificationsController.createNotification)
 .put('/notifications/:id/visualize', notificationsController.visualizeNotification)
 
 module.exports = router

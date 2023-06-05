@@ -15,6 +15,7 @@ const { Sequelize } = require("../config/database");
 const nodemailer = require("nodemailer");
 const Contract = require("../Models/Contract");
 const io = require('../io.js');
+const Notification = require("../Models/Notification");
 
 /*
 regras:
@@ -1127,8 +1128,24 @@ class salesController {
       );
       console.log('\x1b[36m%s\x1b[0m','O socket deveria executar aqui')
       console.log('\x1b[36m%s\x1b[0m','---------------------------------')
-      
-      io.emit("notification", { message: "Nova notificação recebida" });
+      const contractLink = await Contract.findOne({
+        where: {
+          loteId: contractFiller.loteId,
+        },
+      });
+
+      Notification.create({
+        title: "Novo contrato preenchido",
+        description: `O contrato do lote ${lote.name} foi preenchido e está pronto para ser finalizado.`,
+        opened: false,
+        actionLink: `https://sandbox.clicksign.com/accounts/7385/folders/4953788/documents/${contractLink.documentKey}`
+      })
+      io.emit("notification", {
+        title: "Novo contrato preenchido",
+        description: `O contrato do lote ${lote.name} foi preenchido e está pronto para ser finalizado.`,
+        opened: false,
+        actionLink: `https://sandbox.clicksign.com/accounts/7385/folders/4953788/documents/${contractLink.documentKey}`
+      });
         
       console.log('\x1b[36m%s\x1b[0m','---------------------------------')
       res.status(200).json({ message: "Contrato preenchido com sucesso", data });

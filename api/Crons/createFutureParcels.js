@@ -11,7 +11,7 @@ const LotImage = require('../Models/LotImage')
 const Partner = require('../Models/Partner')
 const User = require('../Models/User')
 const app = require('../index.js')
-const io = require('socket.io')(app)
+const io = require('../io.js')
 
 
 
@@ -39,7 +39,7 @@ module.exports = cron.schedule('0 0 1 * *', async () => {
         .catch(error => console.error(error));
 
     console.log('\x1b[36m%s\x1b[0m','Rodando CRON de criação de novas parcelas...')
-    const currentDate = new Date('2024-02-25');
+    const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1;
     let lastParcel;
@@ -155,27 +155,25 @@ module.exports = cron.schedule('0 0 1 * *', async () => {
                             })
                         })
                     })
-
+                    .then(() => {
+                        parcelsCreated = parcelsCreated.reduce((acc, val) => acc.concat(val), [])
+                    })
                     .catch(err => {
                         console.log(err)
                     })
-                    .finally(() => {
-                        parcelsCreated = parcelsCreated.reduce((acc, val) => acc.concat(val), [])
-                    })
+
                     if(parcelsCreated.length > 0){
                         await Parcel.bulkCreate(parcelsCreated)
                         .then(async () => {
                             /* Criar notificação de novas parcelas */
-                            console.log(`Criando novas parcelas, venda: ${sale.id}.`)
+                            console.log('\x1b[36m%s\x1b[0m',`Criando novas parcelas, venda: ${sale.id}.`)
                             Notification.create({
-                                notificationUserId: sale.userId,
                                 title: `Novas parcelas anuais criadas`,
                                 description: `Foram criadas novas parcelas anuais para a venda do lote ${sale.lotes.name}.`,
                                 actionLink: 'Link para a alteração dos juros das parcelas',
                                 opened: false
                             }).then(async () => {
-                                io.sockets.emit('notification', {
-                                    notificationUserId: sale.userId,
+                                io.emit('notification', {
                                     title: `Novas parcelas anuais criadas`,
                                     description: `Foram criadas novas parcelas anuais para a venda do lote ${sale.lotes.name}.`,
                                     actionLink: 'Link para a alteração dos juros das parcelas',

@@ -15,6 +15,16 @@ io.on('connection', socket => {
 
 const PORT = process.env.SOCKET_PORT || 3000;
 
+// setInterval(() => {
+
+// io.emit('notification', { title: 'Titulo',
+// description: 'Descrição',
+// actionLink: 'Link',
+// opened: false
+// });
+
+// }, 5000);
+
 server.listen(PORT, () => {
   console.log(`Servidor socket rodando, porta ${PORT}`);
 });

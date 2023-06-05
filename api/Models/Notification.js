@@ -29,9 +29,9 @@ Notification.belongsTo(User, { as: 'usuarios', foreignKey: 'notificationUserId',
 module.exports = Notification
 
 // Notification.create({
-//     title: 'Teste2',
-//     description: 'Teste2',
-//     actionLink: 'Teste2',
-//     notificationUserId: 29
+//     title: 'Teste Atualizado',
+//     description: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+//     actionLink: 'google.com',
+//     notificationUserId: 6
 // })
 

@@ -170,13 +170,13 @@ module.exports = cron.schedule('0 0 1 * *', async () => {
                             Notification.create({
                                 title: `Novas parcelas anuais criadas`,
                                 description: `Foram criadas novas parcelas anuais para a venda do lote ${sale.lotes.name}.`,
-                                actionLink: 'Link para a alteração dos juros das parcelas',
+                                actionLink: '/loteamentos',
                                 opened: false
                             }).then(async () => {
                                 io.emit('notification', {
                                     title: `Novas parcelas anuais criadas`,
                                     description: `Foram criadas novas parcelas anuais para a venda do lote ${sale.lotes.name}.`,
-                                    actionLink: 'Link para a alteração dos juros das parcelas',
+                                    actionLink: '/loteamentos',
                                     opened: false
                                 });
                             })

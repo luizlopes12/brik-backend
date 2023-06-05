@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const Notification = require('../Models/Notification');
 require("dotenv").config();
 
 class emailController {
@@ -50,6 +51,12 @@ class emailController {
         res.status(500).json({message: 'Erro ao enviar email.'});
       } else {
         transporter.sendMail(mailToUserOptions, (error, info) => {});
+        Notification.create({
+          title: `Solicitação de contato`,
+          description: `${name} entrou em contato pelo site, verifique e responda o email.`,
+          actionLink: 'https://webmail370.umbler.com/interface/root#/email',
+          opened: false
+        })
         res.status(200).json({message: 'Email enviado com sucesso!'});
       }
     });
@@ -106,6 +113,12 @@ class emailController {
         res.status(500).json({message: 'Erro ao enviar email.'});
       } else {
         transporter.sendMail(mailToUserOptions, (error, info) => {});
+        Notification.create({
+          title: `Solicitação de contato`,
+          description: `${name} entrou em contato pela página de divulgação, verifique e responda o email.`,
+          actionLink: 'https://webmail370.umbler.com/interface/root#/email',
+          opened: false
+        })
         res.status(200).json({message: 'Email enviado com sucesso!'});
       }
     });
@@ -187,6 +200,12 @@ class emailController {
         res.status(500).json({message: 'Erro ao enviar email.'});
       } else {
         transporter.sendMail(mailToUserOptions, (error, info) => {});
+        Notification.create({
+          title: `Solicitação de contato`,
+          description: `${name} agendou uma visita ao lote ${lotName}, verifique e responda o email.`,
+          actionLink: 'https://webmail370.umbler.com/interface/root#/email',
+          opened: false
+        })
         res.status(200).json({message: 'Agenda enviada com sucesso!'});
       }
     });

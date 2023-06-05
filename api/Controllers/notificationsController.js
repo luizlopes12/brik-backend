@@ -16,7 +16,7 @@ class notificationsController {
         if (!notification) {
             return res.status(500).json({ message: 'Erro no servidor' })
         }
-        return res.status(201).json({ message: 'Notificação criada com sucesso' })
+        return res.status(200).json({ message: 'Notificação criada com sucesso' })
     }
 
     static listAllNotifications = async (req, res) => {
